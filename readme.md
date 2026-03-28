@@ -65,7 +65,7 @@ Here are a couple highlights:
 
 ## My Design Choices
 
-I decided to roll with the OG Windows '95 look. I am a firm believer in the "Imitate. Assimilate. Innovate." model of learning, so figured for my first project I needed to walk before I could run and start with the imitation phase of the learning process.
+I decided to roll with the OG Windows '95 look. I am a firm believer in the "Imitate. Assimilate. Innovate." model of learning, so figured for the first project I needed to walk before I could run and start with the imitation phase of the learning process.
 
 I'm very glad I chose this path, because I learned A LOT by simply trying to match the styles from the original game.
 
@@ -74,10 +74,10 @@ With that said, I am definitely going to create a modernized version of this som
 ## Next Steps!
 This project really was a lot of fun for me. I plan to continue to refine it and refer back to the many lessons learned for years to come.
 
-* Like I mentioned earlier, I would love to make a "display toggle" which flips the CSS to a modernized, clean, flat, minimalist UI.
+* As I mentioned earlier, I would love to make a "display toggle" which flips the CSS to a modernized, clean, flat, minimalist UI.
 * There are some stupid little aesthetic bugs that are making me pull my hair out, like how the cell width/height gets tweaked by a few pixels when the board is totally revealed. I need to fix that.
 * I would also love to flesh out the Windows '95 thing more, making the Start button do something, add a clock to the bottom right corner, and some functional desktop icons.
-* A really difficult feature I would love to tackle would be to make a feature where the user could choose the difficulty by inputing numbers (row/col/mine numbers). 
+* A really difficult feature I would love to tackle would be to make a feature where the user could choose the difficulty by inputting numbers (row/col/mine numbers). 
 
 That'll be for a rainy day.
 
