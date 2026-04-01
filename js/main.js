@@ -3,9 +3,7 @@ var bombImage = '<img src="images/bomb.png">';
 var flagImage = '<img src="images/flag.png">';
 var wrongBombImage = '<img src="images/wrong-bomb.png">'
 var sizeLookup = {
-  '9': {totalBombs: 10, tableWidth: '245px'},
-  '16': {totalBombs: 40, tableWidth: '420px'},
-  '30': {totalBombs: 160, tableWidth: '794px'}
+  '9': { totalBombs: 10, tableWidth: '245px' }
 };
 var colors = [
   '',
@@ -20,7 +18,7 @@ var colors = [
 ];
 
 /*----- app's state (variables) -----*/
-var size = 16;
+var size = 9;
 var board;
 var bombCount;
 var timeElapsed;
@@ -29,18 +27,26 @@ var hitBomb;
 var elapsedTime;
 var timerId;
 var winner;
+var flagMode = false;
 
 /*----- cached element references -----*/
 var boardEl = document.getElementById('board');
 
 /*----- event listeners -----*/
-document.getElementById('size-btns').addEventListener('click', function(e) {
+document.getElementById('size-btns').addEventListener('click', function (e) {
   size = parseInt(e.target.id.replace('size-', ''));
   init();
   render();
 });
 
-boardEl.addEventListener('click', function(e) {
+document.getElementById('flag-toggle').addEventListener('click', function (e) {
+  flagMode = !flagMode;
+  var btn = e.target.closest('button');
+  btn.innerHTML = `Flag Mode: <strong>${flagMode ? 'ON' : 'OFF'}</strong> <img src="images/flag.png" style="vertical-align: middle;">`;
+  btn.style.backgroundColor = flagMode ? 'lightgreen' : 'lightgray';
+});
+
+boardEl.addEventListener('click', function (e) {
   if (winner || hitBomb) return;
   var clickedEl;
   clickedEl = e.target.tagName.toLowerCase() === 'img' ? e.target.parentElement : e.target;
@@ -49,9 +55,12 @@ boardEl.addEventListener('click', function(e) {
     var row = parseInt(clickedEl.dataset.row);
     var col = parseInt(clickedEl.dataset.col);
     var cell = board[row][col];
-    if (e.shiftKey && !cell.revealed && bombCount > 0) {
-      bombCount += cell.flag() ? -1 : 1;
-    } else {
+    var isFlagAction = e.shiftKey || flagMode;
+    if (isFlagAction && !cell.revealed) {
+      if (cell.flagged || bombCount > 0) {
+        bombCount += cell.flag() ? -1 : 1;
+      }
+    } else if (!cell.flagged) {
       hitBomb = cell.reveal();
       if (hitBomb) {
         revealAll();
@@ -64,24 +73,24 @@ boardEl.addEventListener('click', function(e) {
   }
 });
 
-function createResetListener() { 
-  document.getElementById('reset').addEventListener('click', function() {
+function createResetListener() {
+  document.getElementById('reset').addEventListener('click', function () {
     init();
     render();
   });
 }
 
 /*----- functions -----*/
-function setTimer () {
-  timerId = setInterval(function(){
+function setTimer() {
+  timerId = setInterval(function () {
     elapsedTime += 1;
     document.getElementById('timer').innerText = elapsedTime.toString().padStart(3, '0');
   }, 1000);
 };
 
 function revealAll() {
-  board.forEach(function(rowArr) {
-    rowArr.forEach(function(cell) {
+  board.forEach(function (rowArr) {
+    rowArr.forEach(function (cell) {
       cell.reveal();
     });
   });
@@ -115,7 +124,7 @@ function buildTable() {
   boardEl.style.width = sizeLookup[size].tableWidth;
   createResetListener();
   var cells = Array.from(document.querySelectorAll('td:not(.menu)'));
-  cells.forEach(function(cell, idx) {
+  cells.forEach(function (cell, idx) {
     cell.setAttribute('data-row', Math.floor(idx / size));
     cell.setAttribute('data-col', idx % size);
   });
@@ -123,20 +132,20 @@ function buildTable() {
 
 function buildArrays() {
   var arr = Array(size).fill(null);
-  arr = arr.map(function() {
+  arr = arr.map(function () {
     return new Array(size).fill(null);
   });
   return arr;
 };
 
-function buildCells(){
-  board.forEach(function(rowArr, rowIdx) {
-    rowArr.forEach(function(slot, colIdx) {
+function buildCells() {
+  board.forEach(function (rowArr, rowIdx) {
+    rowArr.forEach(function (slot, colIdx) {
       board[rowIdx][colIdx] = new Cell(rowIdx, colIdx, board);
     });
   });
   addBombs();
-  runCodeForAllCells(function(cell){
+  runCodeForAllCells(function (cell) {
     cell.calcAdjBombs();
   });
 };
@@ -151,12 +160,18 @@ function init() {
   timerId = null;
   hitBomb = false;
   winner = false;
+  flagMode = false;
+  var flagBtn = document.getElementById('flag-toggle');
+  if (flagBtn) {
+    flagBtn.innerHTML = `Flag Mode: <strong>OFF</strong> <img src="images/flag.png" style="vertical-align: middle;">`;
+    flagBtn.style.backgroundColor = 'lightgray';
+  }
 };
 
 function getBombCount() {
   var count = 0;
-  board.forEach(function(row){
-    count += row.filter(function(cell) {
+  board.forEach(function (row) {
+    count += row.filter(function (cell) {
       return cell.bomb;
     }).length
   });
@@ -169,7 +184,7 @@ function addBombs() {
     var row = Math.floor(Math.random() * size);
     var col = Math.floor(Math.random() * size);
     var currentCell = board[row][col]
-    if (!currentCell.bomb){
+    if (!currentCell.bomb) {
       currentCell.bomb = true
       currentTotalBombs -= 1
     }
@@ -177,12 +192,12 @@ function addBombs() {
 };
 
 function getWinner() {
-  for (var row = 0; row<board.length; row++) {
-    for (var col = 0; col<board[0].length; col++) {
+  for (var row = 0; row < board.length; row++) {
+    for (var col = 0; col < board[0].length; col++) {
       var cell = board[row][col];
       if (!cell.revealed && !cell.bomb) return false;
     }
-  } 
+  }
   return true;
 };
 
@@ -190,7 +205,7 @@ function render() {
   document.getElementById('bomb-counter').innerText = bombCount.toString().padStart(3, '0');
   var seconds = timeElapsed % 60;
   var tdList = Array.from(document.querySelectorAll('[data-row]'));
-  tdList.forEach(function(td) {
+  tdList.forEach(function (td) {
     var rowIdx = parseInt(td.getAttribute('data-row'));
     var colIdx = parseInt(td.getAttribute('data-col'));
     var cell = board[rowIdx][colIdx];
@@ -212,7 +227,7 @@ function render() {
   });
   if (hitBomb) {
     document.getElementById('reset').innerHTML = '<img src=images/dead-face.png>';
-    runCodeForAllCells(function(cell) {
+    runCodeForAllCells(function (cell) {
       if (!cell.bomb && cell.flagged) {
         var td = document.querySelector(`[data-row="${cell.row}"][data-col="${cell.col}"]`);
         td.innerHTML = wrongBombImage;
@@ -225,8 +240,8 @@ function render() {
 };
 
 function runCodeForAllCells(cb) {
-  board.forEach(function(rowArr) {
-    rowArr.forEach(function(cell) {
+  board.forEach(function (rowArr) {
+    rowArr.forEach(function (cell) {
       cb(cell);
     });
   });
