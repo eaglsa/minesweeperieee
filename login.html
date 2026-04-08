@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Minesweeper Event</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0D8584; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: white; }
+        .login-box { background: rgba(0,0,0,0.5); padding: 40px; border-radius: 10px; text-align: center; width: 100%; max-width: 300px; }
+        input { width: 100%; padding: 10px; margin-bottom: 20px; box-sizing: border-box; border-radius: 5px; border: none; font-size: 16px; }
+        button { width: 100%; padding: 10px; background-color: #fff; color: #0D8584; font-weight: bold; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #eee; }
+        .error { color: #ffcccc; margin-top: 10px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>Enter Match</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Your Name or ID" required autocomplete="off">
+            <button type="submit">Start Game</button>
+            <div id="errorMsg" class="error"></div>
+        </form>
+    </div>
+    <script type="module" src="/src/js/login.js"></script>
+</body>
+</html>

@@ -1,44 +1,43 @@
 /*----- constants -----*/
+import { db } from '../firebase.js';
+import { ref, get, update } from 'firebase/database';
+import { Cell } from './cell.js';
+
 var bombImage = '<img src="images/bomb.png">';
 var flagImage = '<img src="images/flag.png">';
-var wrongBombImage = '<img src="images/wrong-bomb.png">'
+var wrongBombImage = '<img src="images/wrong-bomb.png">';
 var sizeLookup = {
-  '9': { totalBombs: 10, tableWidth: '245px' }
+  '9': { totalBombs: 10, tableWidth: '360px' } 
 };
-var colors = [
-  '',
-  '#0000FA',
-  '#4B802D',
-  '#DB1300',
-  '#202081',
-  '#690400',
-  '#457A7A',
-  '#1B1B1B',
-  '#7A7A7A',
-];
+var colors = ['', '#0000FA', '#4B802D', '#DB1300', '#202081', '#690400', '#457A7A', '#1B1B1B', '#7A7A7A'];
+
+/*----- Auth & Game Session -----*/
+const playerName = sessionStorage.getItem('minesweeper_player');
+if (!playerName) {
+    window.location.href = '/login.html';
+} else {
+    // Verify player is allowed to play (One-Shot Logic)
+    get(ref(db, `players/${playerName}`)).then((snap) => {
+        if (snap.exists() && snap.val().status === 'finished') {
+            window.location.href = '/result.html';
+        }
+    });
+}
 
 /*----- app's state (variables) -----*/
-var size = 9;
+var size = 9; 
 var board;
 var bombCount;
-var timeElapsed;
-var adjBombs;
-var hitBomb;
 var elapsedTime;
 var timerId;
 var winner;
 var flagMode = false;
+window.hitBomb = false; 
 
 /*----- cached element references -----*/
 var boardEl = document.getElementById('board');
 
 /*----- event listeners -----*/
-document.getElementById('size-btns').addEventListener('click', function (e) {
-  size = parseInt(e.target.id.replace('size-', ''));
-  init();
-  render();
-});
-
 document.getElementById('flag-toggle').addEventListener('click', function (e) {
   flagMode = !flagMode;
   var btn = e.target.closest('button');
@@ -46,38 +45,62 @@ document.getElementById('flag-toggle').addEventListener('click', function (e) {
   btn.style.backgroundColor = flagMode ? 'lightgreen' : 'lightgray';
 });
 
+// Mobile long press logic for fat-finger / touch devices
+let touchTimer;
+let touchDuration = 500; // 500ms for long press
+boardEl.addEventListener('touchstart', function(e) {
+  if (winner || window.hitBomb) return;
+  const target = e.target.tagName.toLowerCase() === 'img' ? e.target.parentElement : e.target;
+  if (target.classList.contains('game-cell')) {
+      touchTimer = setTimeout(() => {
+          handleCellInteraction(target, true); // force flag
+          touchTimer = null;
+      }, touchDuration);
+  }
+}, {passive: true});
+
+boardEl.addEventListener('touchend', function(e) {
+  if (touchTimer) {
+      clearTimeout(touchTimer);
+      touchTimer = null;
+  }
+});
+boardEl.addEventListener('touchmove', function(e) {
+  if (touchTimer) {
+      clearTimeout(touchTimer);
+      touchTimer = null;
+  }
+});
+
 boardEl.addEventListener('click', function (e) {
-  if (winner || hitBomb) return;
+  if (winner || window.hitBomb) return;
   var clickedEl;
   clickedEl = e.target.tagName.toLowerCase() === 'img' ? e.target.parentElement : e.target;
+  handleCellInteraction(clickedEl, e.shiftKey || flagMode);
+});
+
+function handleCellInteraction(clickedEl, isFlagAction) {
   if (clickedEl.classList.contains('game-cell')) {
     if (!timerId) setTimer();
     var row = parseInt(clickedEl.dataset.row);
     var col = parseInt(clickedEl.dataset.col);
     var cell = board[row][col];
-    var isFlagAction = e.shiftKey || flagMode;
+    
     if (isFlagAction && !cell.revealed) {
       if (cell.flagged || bombCount > 0) {
         bombCount += cell.flag() ? -1 : 1;
       }
     } else if (!cell.flagged) {
-      hitBomb = cell.reveal();
-      if (hitBomb) {
+      window.hitBomb = cell.reveal();
+      if (window.hitBomb) {
         revealAll();
         clearInterval(timerId);
-        e.target.style.backgroundColor = 'red';
+        clickedEl.style.backgroundColor = 'red';
       }
     }
     winner = getWinner();
     render();
   }
-});
-
-function createResetListener() {
-  document.getElementById('reset').addEventListener('click', function () {
-    init();
-    render();
-  });
 }
 
 /*----- functions -----*/
@@ -86,7 +109,7 @@ function setTimer() {
     elapsedTime += 1;
     document.getElementById('timer').innerText = elapsedTime.toString().padStart(3, '0');
   }, 1000);
-};
+}
 
 function revealAll() {
   board.forEach(function (rowArr) {
@@ -94,21 +117,15 @@ function revealAll() {
       cell.reveal();
     });
   });
-};
+}
 
 function buildTable() {
   var topRow = `
   <tr>
     <td class="menu" id="window-title-bar" colspan="${size}">
-      <div id="window-title"><img src="images/mine-menu-icon.png"> Minesweeper</div>
+      <div id="window-title"><img src="images/mine-menu-icon.png"> IEEE Minesweeper</div>
       <div id="window-controls"><img src="images/window-controls.png"></div>
     </td>
-  <tr>
-    <td class="menu" id="folder-bar" colspan="${size}">
-      <div id="folder1"><a href="https://github.com/nickarocho/minesweeper/blob/master/readme.md" target="blank">Read Me </a></div>
-      <div id="folder2"><a href="https://github.com/nickarocho/minesweeper" target="blank">Source Code</a></div>
-    </td>
-  </tr>
   </tr>
     <tr>
       <td class="menu" colspan="${size}">
@@ -122,7 +139,7 @@ function buildTable() {
     `;
   boardEl.innerHTML = topRow + `<tr>${'<td class="game-cell"></td>'.repeat(size)}</tr>`.repeat(size);
   boardEl.style.width = sizeLookup[size].tableWidth;
-  createResetListener();
+  
   var cells = Array.from(document.querySelectorAll('td:not(.menu)'));
   cells.forEach(function (cell, idx) {
     cell.setAttribute('data-row', Math.floor(idx / size));
@@ -136,7 +153,7 @@ function buildArrays() {
     return new Array(size).fill(null);
   });
   return arr;
-};
+}
 
 function buildCells() {
   board.forEach(function (rowArr, rowIdx) {
@@ -148,7 +165,7 @@ function buildCells() {
   runCodeForAllCells(function (cell) {
     cell.calcAdjBombs();
   });
-};
+}
 
 function init() {
   buildTable();
@@ -158,15 +175,9 @@ function init() {
   elapsedTime = 0;
   clearInterval(timerId);
   timerId = null;
-  hitBomb = false;
+  window.hitBomb = false;
   winner = false;
-  flagMode = false;
-  var flagBtn = document.getElementById('flag-toggle');
-  if (flagBtn) {
-    flagBtn.innerHTML = `Flag Mode: <strong>OFF</strong> <img src="images/flag.png" style="vertical-align: middle;">`;
-    flagBtn.style.backgroundColor = 'lightgray';
-  }
-};
+}
 
 function getBombCount() {
   var count = 0;
@@ -176,7 +187,7 @@ function getBombCount() {
     }).length
   });
   return count;
-};
+}
 
 function addBombs() {
   var currentTotalBombs = sizeLookup[`${size}`].totalBombs;
@@ -189,7 +200,7 @@ function addBombs() {
       currentTotalBombs -= 1
     }
   }
-};
+}
 
 function getWinner() {
   for (var row = 0; row < board.length; row++) {
@@ -199,11 +210,45 @@ function getWinner() {
     }
   }
   return true;
-};
+}
 
+async function finalizeGame() {
+    clearInterval(timerId);
+    let cellsOpened = 0;
+    runCodeForAllCells(c => {
+        if (c.revealed && !c.bomb) cellsOpened++;
+    });
+    
+    // Formula: FinalScore = max(0, (CellsOpened/81 * 1000) + WinBonus - (Seconds * 2))
+    const winBonus = winner ? 2000 : 0;
+    let finalScore = Math.floor(((cellsOpened / 81) * 1000) + winBonus - (elapsedTime * 2));
+    finalScore = Math.max(0, finalScore);
+    
+    sessionStorage.setItem('minesweeper_score_breakdown', JSON.stringify({
+        cellsOpened,
+        winBonus,
+        elapsedTime,
+        finalScore
+    }));
+    
+    if (playerName) {
+        await update(ref(db, `players/${playerName}`), {
+            status: 'finished',
+            score: finalScore,
+            cellsOpened: cellsOpened,
+            timeElapsed: elapsedTime,
+            win: winner
+        });
+    }
+    
+    setTimeout(() => {
+        window.location.href = '/result.html';
+    }, 2000); // 2 second delay before kick
+}
+
+let isFinalizing = false;
 function render() {
   document.getElementById('bomb-counter').innerText = bombCount.toString().padStart(3, '0');
-  var seconds = timeElapsed % 60;
   var tdList = Array.from(document.querySelectorAll('[data-row]'));
   tdList.forEach(function (td) {
     var rowIdx = parseInt(td.getAttribute('data-row'));
@@ -225,7 +270,8 @@ function render() {
       td.innerHTML = '';
     }
   });
-  if (hitBomb) {
+  
+  if (window.hitBomb) {
     document.getElementById('reset').innerHTML = '<img src=images/dead-face.png>';
     runCodeForAllCells(function (cell) {
       if (!cell.bomb && cell.flagged) {
@@ -233,11 +279,18 @@ function render() {
         td.innerHTML = wrongBombImage;
       }
     });
+    if(!isFinalizing) {
+        isFinalizing = true;
+        finalizeGame();
+    }
   } else if (winner) {
     document.getElementById('reset').innerHTML = '<img src=images/cool-face.png>';
-    clearInterval(timerId);
+    if(!isFinalizing) {
+        isFinalizing = true;
+        finalizeGame();
+    }
   }
-};
+}
 
 function runCodeForAllCells(cb) {
   board.forEach(function (rowArr) {

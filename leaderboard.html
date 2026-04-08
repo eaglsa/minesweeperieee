@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - IEEE Minesweeper</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0D8584; margin: 0; color: white; display: flex; flex-direction: column; align-items: center; padding: 40px 20px;}
+        h1 { margin-top: 0; }
+        .board { background: rgba(0,0,0,0.5); padding: 30px; border-radius: 10px; width: 100%; max-width: 600px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 20px;}
+        th, td { padding: 12px; border-bottom: 1px solid #555; }
+        th { color: #aaa; text-transform: uppercase; font-size: 0.9em;}
+        tr:nth-child(even) { background-color: rgba(255,255,255,0.05); }
+        .status-playing { color: #FFC107; font-style: italic;}
+        .status-finished { color: #4CAF50; font-weight: bold;}
+    </style>
+</head>
+<body>
+    <h1>Event Leaderboard</h1>
+    <div class="board">
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+                <tr><td colspan="4" style="text-align: center;">Loading data...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script type="module" src="/src/js/leaderboard.js"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-class  Cell {
+export class Cell {
     constructor(row, col, board) {
         this.row = row;
         this.col = col;
@@ -10,16 +10,16 @@ class  Cell {
 
     getAdjCells() {
         var adj = [];
-        var lastRow = board.length - 1;
-        var lastCol = board[0].length - 1;
-        if (this.row > 0 && this.col > 0) adj.push(board[this.row - 1][this.col - 1]);
-        if (this.row > 0) adj.push(board[this.row - 1][this.col]);
-        if (this.row > 0 && this.col < lastCol) adj.push(board[this.row - 1][this.col + 1]);
-        if (this.col < lastCol) adj.push(board[this.row][this.col + 1]);
-        if (this.row < lastRow && this.col < lastCol) adj.push(board[this.row + 1][this.col + 1]);
-        if (this.row < lastRow) adj.push(board[this.row + 1][this.col]);
-        if (this.row < lastRow && this.col > 0) adj.push(board[this.row + 1][this.col - 1]);
-        if (this.col > 0) adj.push(board[this.row][this.col - 1]);       
+        var lastRow = this.board.length - 1;
+        var lastCol = this.board[0].length - 1;
+        if (this.row > 0 && this.col > 0) adj.push(this.board[this.row - 1][this.col - 1]);
+        if (this.row > 0) adj.push(this.board[this.row - 1][this.col]);
+        if (this.row > 0 && this.col < lastCol) adj.push(this.board[this.row - 1][this.col + 1]);
+        if (this.col < lastCol) adj.push(this.board[this.row][this.col + 1]);
+        if (this.row < lastRow && this.col < lastCol) adj.push(this.board[this.row + 1][this.col + 1]);
+        if (this.row < lastRow) adj.push(this.board[this.row + 1][this.col]);
+        if (this.row < lastRow && this.col > 0) adj.push(this.board[this.row + 1][this.col - 1]);
+        if (this.col > 0) adj.push(this.board[this.row][this.col - 1]);       
         return adj;
     }
 
@@ -39,7 +39,7 @@ class  Cell {
     }
 
     reveal() {
-        if (this.revealed && !hitBomb) return;
+        if (this.revealed && !window.hitBomb) return;
         this.revealed = true;
         if (this.bomb) return true;
         if (this.adjBombs === 0) {
