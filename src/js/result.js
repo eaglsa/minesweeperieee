@@ -7,11 +7,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const data = JSON.parse(rawData);
 
+    const msg = document.getElementById('status-msg');
+    if (data.win) {
+        msg.textContent = "MISSION COMPLETE";
+        msg.style.color = "#4CAF50";
+    } else {
+        msg.textContent = "MISSION FAILED";
+        msg.style.color = "#e74c3c";
+    }
+
     // Calculate derived fields precisely
-    const cellScore = Math.floor((data.cellsOpened / 81) * 1000);
+    const cellScore = data.cellProgressScore || 0;
+    const flagBonus = (data.correctFlags || 0) * 50;
     const timePenalty = -(data.elapsedTime * 2);
 
     document.getElementById('cell-score').textContent = cellScore;
+    document.getElementById('flag-bonus').textContent = `+${flagBonus} (for ${data.correctFlags || 0} correct flags)`;
     document.getElementById('win-bonus').textContent = `+${data.winBonus}`;
     document.getElementById('time-penalty').textContent = timePenalty;
     document.getElementById('final-score').textContent = data.finalScore;

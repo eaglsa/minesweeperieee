@@ -14,10 +14,17 @@
         tr:nth-child(even) { background-color: rgba(255,255,255,0.05); }
         .status-playing { color: #FFC107; font-style: italic;}
         .status-finished { color: #4CAF50; font-weight: bold;}
+        .navbar { position: absolute; top: 0; left: 0; width: 100%; background: rgba(0,0,0,0.5); padding: 15px; z-index: 1000; display: flex; justify-content: center; gap: 40px; box-sizing: border-box; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .navbar a { color: white; text-decoration: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: bold; font-size: 16px; letter-spacing: 1px; transition: color 0.2s; }
+        .navbar a:hover { color: #4CAF50; }
     </style>
 </head>
 <body>
-    <h1>Event Leaderboard</h1>
+    <nav class="navbar">
+        <a href="/result.html">Result</a>
+        <a href="/leaderboard.html">Leaderboard</a>
+    </nav>
+    <h1 style="margin-top: 80px;">Event Leaderboard</h1>
     <div class="board">
         <table>
             <thead>

@@ -33,6 +33,7 @@ var timerId;
 var winner;
 var flagMode = false;
 window.hitBomb = false; 
+let snapshotCellsOpened = -1;
 
 /*----- cached element references -----*/
 var boardEl = document.getElementById('board');
@@ -93,6 +94,10 @@ function handleCellInteraction(clickedEl, isFlagAction) {
     } else if (!cell.flagged) {
       window.hitBomb = cell.reveal();
       if (window.hitBomb) {
+        snapshotCellsOpened = 0;
+        runCodeForAllCells(c => {
+          if (c.revealed && !c.bomb) snapshotCellsOpened++;
+        });
         revealAll();
         clearInterval(timerId);
         clickedEl.style.backgroundColor = 'red';
@@ -177,6 +182,7 @@ function init() {
   timerId = null;
   window.hitBomb = false;
   winner = false;
+  snapshotCellsOpened = -1;
 }
 
 function getBombCount() {
@@ -203,32 +209,65 @@ function addBombs() {
 }
 
 function getWinner() {
+  let totalFlags = 0;
+  let correctFlags = 0;
   for (var row = 0; row < board.length; row++) {
     for (var col = 0; col < board[0].length; col++) {
       var cell = board[row][col];
-      if (!cell.revealed && !cell.bomb) return false;
+        if (cell.flagged) {
+            totalFlags++;
+            if (cell.bomb) correctFlags++;
+        }
     }
   }
-  return true;
+  return (totalFlags === 10 && correctFlags === 10);
 }
 
 async function finalizeGame() {
     clearInterval(timerId);
     let cellsOpened = 0;
+    if (snapshotCellsOpened !== -1) {
+        cellsOpened = snapshotCellsOpened;
+    } else {
+        runCodeForAllCells(c => {
+            if (c.revealed && !c.bomb) cellsOpened++;
+        });
+    }
+
+    let correctFlags = 0;
+    let totalFlags = 0;
     runCodeForAllCells(c => {
-        if (c.revealed && !c.bomb) cellsOpened++;
+        if (c.flagged) {
+            totalFlags++;
+            if (c.bomb) correctFlags++;
+        }
     });
     
-    // Formula: FinalScore = max(0, (CellsOpened/81 * 1000) + WinBonus - (Seconds * 2))
-    const winBonus = winner ? 2000 : 0;
-    let finalScore = Math.floor(((cellsOpened / 81) * 1000) + winBonus - (elapsedTime * 2));
+    // All or nothing logic for WinBonus and Status
+    let winBonus = 0;
+    let statusWin = false;
+    if (correctFlags === 10 && totalFlags === 10) {
+        winBonus = 2000;
+        statusWin = true;
+    } else {
+        winBonus = 0;
+        statusWin = false;
+    }
+    
+    // Formula: FinalScore = max(0, (CellsOpened / 71 * 1000) + (CorrectFlags * 50) + WinBonus - (Seconds * 2))
+    let cellProgressScore = Math.floor((cellsOpened / 71) * 1000);
+    let flagBonusPnts = correctFlags * 50;
+    let finalScore = Math.floor(cellProgressScore + flagBonusPnts + winBonus - (elapsedTime * 2));
     finalScore = Math.max(0, finalScore);
     
     sessionStorage.setItem('minesweeper_score_breakdown', JSON.stringify({
         cellsOpened,
+        cellProgressScore,
+        correctFlags,
         winBonus,
         elapsedTime,
-        finalScore
+        finalScore,
+        win: statusWin
     }));
     
     if (playerName) {
@@ -237,7 +276,7 @@ async function finalizeGame() {
             score: finalScore,
             cellsOpened: cellsOpened,
             timeElapsed: elapsedTime,
-            win: winner
+            win: statusWin
         });
     }
     

@@ -3,8 +3,8 @@ import { ref, onValue, remove } from 'firebase/database';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Obfuscated password: "ieee" in base64 is aWVlZQ==
-    // Obfuscated master password "admin2026" is YWRtaW4yMDI2
-    const targetHash = "YWRtaW4yMDI2"; 
+    // Obfuscated master password "CS_Society_2026" is Q1NfU29jaWV0eV8yMDI2
+    const targetHash = "Q1NfU29jaWV0eV8yMDI2"; 
 
     // Prompt logic
     setTimeout(() => {
